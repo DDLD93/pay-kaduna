@@ -3,15 +3,15 @@ info:
   title: PayKaduna Integration API
   version: 1.0.0
   description: |
-    Production-grade Node.js/TypeScript microservice acting as a secure gateway to the PayKaduna Intelligent Billing System (IBS).
+    REST API gateway for PayKaduna Intelligent Billing System.
     
-    This service abstracts the complexity of HMAC signing, request formatting, and error handling, exposing a clean REST API to internal systems.
+    Handles HMAC signing, request formatting, and error handling.
 
 servers:
   - url: http://localhost:3000
-    description: Local development server (default, will be replaced by DOMAIN_URL if set)
+    description: Local development server
   - url: https://api.example.com
-    description: Production server (will be updated dynamically from DOMAIN_URL if provided)
+    description: Production server
 
 tags:
   - name: Bills
@@ -31,7 +31,7 @@ paths:
       tags:
         - Bills
       summary: Create a single bill
-      description: Creates a new electronic bill (ES Bill) for a taxpayer
+      description: Create an electronic bill for a taxpayer
       operationId: createBill
       requestBody:
         required: true
@@ -54,7 +54,7 @@ paths:
                   recommendedRate: 0.05
       responses:
         '200':
-          description: Bill created successfully
+          description: Bill created
           content:
             application/json:
               schema:
@@ -71,7 +71,7 @@ paths:
       tags:
         - Bills
       summary: Create bulk bills
-      description: Creates multiple bills in a single request
+      description: Create multiple bills in one request
       operationId: createBulkBills
       requestBody:
         required: true
@@ -81,13 +81,13 @@ paths:
               $ref: '#/components/schemas/BulkBillRequest'
       responses:
         '200':
-          description: All bills created successfully
+          description: All bills created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateBillResponse'
         '207':
-          description: Partial success - some bills failed
+          description: Partial success, some bills failed
           content:
             application/json:
               schema:
@@ -104,7 +104,7 @@ paths:
       tags:
         - Bills
       summary: Get bill by reference
-      description: Retrieves a bill and its items by bill reference
+      description: Get bill details by reference number
       operationId: getBill
       parameters:
         - name: reference
@@ -115,7 +115,7 @@ paths:
           description: Bill reference number
       responses:
         '200':
-          description: Bill retrieved successfully
+          description: Bill retrieved
           content:
             application/json:
               schema:
@@ -132,7 +132,7 @@ paths:
       tags:
         - Bills
       summary: Get invoice URL
-      description: Retrieves the invoice URL for a bill
+      description: Get payment invoice URL for a bill
       operationId: getInvoiceUrl
       parameters:
         - name: reference
@@ -143,7 +143,7 @@ paths:
           description: Bill reference number
       responses:
         '200':
-          description: Invoice URL retrieved successfully
+          description: Invoice URL retrieved
           content:
             application/json:
               schema:
@@ -160,7 +160,7 @@ paths:
       tags:
         - Bills
       summary: Attach metadata to bill
-      description: Attaches additional data to a bill
+      description: Add custom metadata to a bill
       operationId: attachMetadata
       parameters:
         - name: reference
@@ -192,7 +192,7 @@ paths:
       tags:
         - Bills
       summary: Bulk attach metadata
-      description: Attaches additional data to multiple bills
+      description: Add custom metadata to multiple bills
       operationId: bulkAttachMetadata
       requestBody:
         required: true
@@ -202,7 +202,7 @@ paths:
               $ref: '#/components/schemas/BulkAttachDataRequest'
       responses:
         '200':
-          description: Metadata attached successfully
+          description: Metadata attached
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -215,7 +215,7 @@ paths:
       tags:
         - Taxpayers
       summary: Register taxpayer
-      description: Registers a new taxpayer (Individual or Corporate)
+      description: Register a new taxpayer (Individual or Corporate)
       operationId: registerTaxpayer
       requestBody:
         required: true
@@ -225,7 +225,7 @@ paths:
               $ref: '#/components/schemas/RegisterTaxpayerRequest'
       responses:
         '201':
-          description: Taxpayer registered successfully
+          description: Taxpayer registered
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -238,7 +238,7 @@ paths:
       tags:
         - Taxpayers
       summary: Search taxpayers
-      description: Searches for taxpayers by name, TPUI, TIN, NIN, Phone, or Email
+      description: Search by name, TPUI, TIN, NIN, phone, or email
       operationId: searchTaxpayer
       parameters:
         - name: term
@@ -247,10 +247,10 @@ paths:
           schema:
             type: string
             minLength: 4
-          description: Search term (minimum 4 characters)
+          description: Search term, minimum 4 characters
       responses:
         '200':
-          description: Search completed successfully
+          description: Search results
           content:
             application/json:
               schema:
@@ -269,7 +269,7 @@ paths:
       tags:
         - Payments
       summary: Initialize payment
-      description: Initializes a payment transaction for a bill
+      description: Start payment for a bill
       operationId: initializePayment
       requestBody:
         required: true
@@ -279,7 +279,7 @@ paths:
               $ref: '#/components/schemas/InitPaymentRequest'
       responses:
         '200':
-          description: Payment initialized successfully
+          description: Payment initialized
           content:
             application/json:
               schema:
@@ -296,7 +296,7 @@ paths:
       tags:
         - Configuration
       summary: Update redirect URL
-      description: Updates the payment redirect URL
+      description: Set payment redirect URL
       operationId: updateRedirectUrl
       parameters:
         - name: redirectUrl
@@ -305,10 +305,10 @@ paths:
           schema:
             type: string
             format: uri
-          description: Redirect URL (URL encoded)
+          description: Redirect URL
       responses:
         '200':
-          description: Redirect URL updated successfully
+          description: Redirect URL updated
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -320,25 +320,24 @@ paths:
     post:
       tags:
         - Webhooks
-      summary: Send webhook events
+      summary: Webhook endpoint
       description: |
-        Endpoint for sending webhook events to the PayKaduna integration service.
+        Receive webhook events from PayKaduna.
         
         **Authentication:**
-        All requests must include an HMAC-SHA512 signature in the `x-paykaduna-signature` header to verify authenticity.
+        Include HMAC-SHA512 signature in `x-paykaduna-signature` header.
         
-        **Signature Requirements:**
-        - Include signature in the `x-paykaduna-signature` header
-        - Generate signature using: `HMAC-SHA512(JSON.stringify(requestBody), secretKey).hex()`
-        - The signature must be computed from the exact JSON string sent in the request body
+        **Signature:**
+        Generate using: `HMAC-SHA512(JSON.stringify(requestBody), secretKey).hex()`
+        Use the exact JSON string from the request body.
         
         **Request Format:**
-        All requests must follow the standardized format with `event`, `data` (must include `invoiceNo` as string), and `message` fields.
+        Include `event`, `data` (with `invoiceNo` as string), and `message` fields.
         
         **Event Types:**
-        - `charge.success` or `payment.success`: Payment completed successfully
+        - `charge.success` or `payment.success`: Payment completed
         - `payment.error`: Payment failed
-        - Custom event types: Any string value
+        - Custom: Any string value
       operationId: handleWebhook
       parameters:
         - name: x-paykaduna-signature
@@ -346,7 +345,7 @@ paths:
           required: true
           schema:
             type: string
-          description: HMAC-SHA512 signature for request authentication
+          description: HMAC-SHA512 signature
       requestBody:
         required: true
         content:
@@ -377,7 +376,7 @@ paths:
                   message: "Payment processing failed"
       responses:
         '200':
-          description: Webhook event processed successfully
+          description: Webhook processed
           content:
             application/json:
               schema:
@@ -391,7 +390,7 @@ paths:
                   status: "paid"
                 message: "Webhook event processed successfully"
         '400':
-          description: Validation error - Invalid request format
+          description: Invalid request format
           content:
             application/json:
               schema:
@@ -401,7 +400,7 @@ paths:
                 data: {}
                 message: "Invalid request: event is required and must be a string"
         '401':
-          description: Signature validation failed or missing signature
+          description: Invalid or missing signature
           content:
             application/json:
               schema:
@@ -455,7 +454,7 @@ components:
           type: string
         engineCode:
           type: string
-          description: Optional, injected from env if missing
+          description: Optional engine code
         esBillDetailsDto:
           type: array
           items:
@@ -615,10 +614,10 @@ components:
           format: password
         rcNumber:
           type: string
-          description: Required if userType is Corporate
+          description: Required for Corporate
         industryId:
           type: integer
-          description: Required if userType is Corporate
+          description: Required for Corporate
         officeName:
           type: string
         officeEmail:
@@ -703,11 +702,11 @@ components:
       properties:
         event:
           type: string
-          description: Event type identifier (e.g., 'charge.success', 'payment.success', 'payment.error')
+          description: Event type (e.g., 'charge.success', 'payment.success', 'payment.error')
           example: "charge.success"
         data:
           type: object
-          description: Event data payload (must include invoiceNo as string)
+          description: Event data (must include invoiceNo)
           additionalProperties: true
           properties:
             invoiceNo:
@@ -721,33 +720,33 @@ components:
             status: "paid"
         message:
           type: string
-          description: Descriptive message for the event
+          description: Event message
           example: "Payment completed successfully"
 
   responses:
     BadRequest:
-      description: Bad request - validation failure or PayKaduna rejection
+      description: Validation error or PayKaduna rejection
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
 
     Unauthorized:
-      description: Unauthorized - Invalid API Key or HMAC Signature
+      description: Invalid API key or HMAC signature
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
 
     NotFound:
-      description: Not found - Bill or Taxpayer not found
+      description: Bill or taxpayer not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
 
     InternalServerError:
-      description: Internal server error - Network error or parsing failure
+      description: Server error or network failure
       content:
         application/json:
           schema:
