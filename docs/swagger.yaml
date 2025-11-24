@@ -1,0 +1,754 @@
+openapi: 3.0.0
+info:
+  title: PayKaduna Integration API
+  version: 1.0.0
+  description: |
+    Production-grade Node.js/TypeScript microservice acting as a secure gateway to the PayKaduna Intelligent Billing System (IBS).
+    
+    This service abstracts the complexity of HMAC signing, request formatting, and error handling, exposing a clean REST API to internal systems.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server (default, will be replaced by DOMAIN_URL if set)
+  - url: https://api.example.com
+    description: Production server (will be updated dynamically from DOMAIN_URL if provided)
+
+tags:
+  - name: Bills
+    description: Bill management endpoints
+  - name: Taxpayers
+    description: Taxpayer management endpoints
+  - name: Payments
+    description: Payment endpoints
+  - name: Configuration
+    description: Configuration endpoints
+  - name: Webhooks
+    description: Webhook endpoints for receiving events
+
+paths:
+  /v1/bills:
+    post:
+      tags:
+        - Bills
+      summary: Create a single bill
+      description: Creates a new electronic bill (ES Bill) for a taxpayer
+      operationId: createBill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBillRequest'
+            example:
+              identifier: "TAXPAYER123"
+              firstName: "John"
+              middleName: "Doe"
+              lastName: "Smith"
+              telephone: "+2348012345678"
+              address: "123 Main Street, Kaduna"
+              engineCode: "185477"
+              esBillDetailsDto:
+                - amount: 10000.00
+                  mdasId: 1
+                  narration: "Property Tax"
+                  recommendedRate: 0.05
+      responses:
+        '200':
+          description: Bill created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBillResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/bills/bulk:
+    post:
+      tags:
+        - Bills
+      summary: Create bulk bills
+      description: Creates multiple bills in a single request
+      operationId: createBulkBills
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkBillRequest'
+      responses:
+        '200':
+          description: All bills created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBillResponse'
+        '207':
+          description: Partial success - some bills failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBillResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/bills/{reference}:
+    get:
+      tags:
+        - Bills
+      summary: Get bill by reference
+      description: Retrieves a bill and its items by bill reference
+      operationId: getBill
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill reference number
+      responses:
+        '200':
+          description: Bill retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/bills/{reference}/invoice-url:
+    get:
+      tags:
+        - Bills
+      summary: Get invoice URL
+      description: Retrieves the invoice URL for a bill
+      operationId: getInvoiceUrl
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill reference number
+      responses:
+        '200':
+          description: Invoice URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceUrlResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/bills/{reference}/metadata:
+    post:
+      tags:
+        - Bills
+      summary: Attach metadata to bill
+      description: Attaches additional data to a bill
+      operationId: attachMetadata
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill reference number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachDataRequest'
+      responses:
+        '200':
+          description: Metadata attached successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/bills/metadata/bulk:
+    post:
+      tags:
+        - Bills
+      summary: Bulk attach metadata
+      description: Attaches additional data to multiple bills
+      operationId: bulkAttachMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkAttachDataRequest'
+      responses:
+        '200':
+          description: Metadata attached successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/taxpayers:
+    post:
+      tags:
+        - Taxpayers
+      summary: Register taxpayer
+      description: Registers a new taxpayer (Individual or Corporate)
+      operationId: registerTaxpayer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterTaxpayerRequest'
+      responses:
+        '201':
+          description: Taxpayer registered successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/taxpayers/search:
+    get:
+      tags:
+        - Taxpayers
+      summary: Search taxpayers
+      description: Searches for taxpayers by name, TPUI, TIN, NIN, Phone, or Email
+      operationId: searchTaxpayer
+      parameters:
+        - name: term
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 4
+          description: Search term (minimum 4 characters)
+      responses:
+        '200':
+          description: Search completed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Taxpayer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/payments/initialize:
+    post:
+      tags:
+        - Payments
+      summary: Initialize payment
+      description: Initializes a payment transaction for a bill
+      operationId: initializePayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitPaymentRequest'
+      responses:
+        '200':
+          description: Payment initialized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitPaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/configuration/redirect-url:
+    put:
+      tags:
+        - Configuration
+      summary: Update redirect URL
+      description: Updates the payment redirect URL
+      operationId: updateRedirectUrl
+      parameters:
+        - name: redirectUrl
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Redirect URL (URL encoded)
+      responses:
+        '200':
+          description: Redirect URL updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/paykaduna/webhook:
+    post:
+      tags:
+        - Webhooks
+      summary: Send webhook events
+      description: |
+        Endpoint for sending webhook events to the PayKaduna integration service.
+        
+        **Authentication:**
+        All requests must include an HMAC-SHA512 signature in the `x-paykaduna-signature` header to verify authenticity.
+        
+        **Signature Requirements:**
+        - Include signature in the `x-paykaduna-signature` header
+        - Generate signature using: `HMAC-SHA512(JSON.stringify(requestBody), secretKey).hex()`
+        - The signature must be computed from the exact JSON string sent in the request body
+        
+        **Request Format:**
+        All requests must follow the standardized format with `event`, `data` (must include `invoiceNo` as string), and `message` fields.
+        
+        **Event Types:**
+        - `charge.success` or `payment.success`: Payment completed successfully
+        - `payment.error`: Payment failed
+        - Custom event types: Any string value
+      operationId: handleWebhook
+      parameters:
+        - name: x-paykaduna-signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA512 signature for request authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+            examples:
+              paymentSuccess:
+                summary: Payment success event
+                value:
+                  event: "charge.success"
+                  data:
+                    invoiceNo: "INV123456"
+                    billReference: "BILL123456"
+                    amount: 10000.00
+                    status: "paid"
+                    transactionId: "TXN789"
+                    timestamp: "2025-01-15T10:30:00Z"
+                  message: "Payment completed successfully"
+              paymentError:
+                summary: Payment error event
+                value:
+                  event: "payment.error"
+                  data:
+                    invoiceNo: "INV123456"
+                    billReference: "BILL123456"
+                    transactionId: "TXN789"
+                  message: "Payment processing failed"
+      responses:
+        '200':
+          description: Webhook event processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEvent'
+              example:
+                event: "charge.success"
+                data:
+                  invoiceNo: "INV123456"
+                  billReference: "BILL123456"
+                  amount: 10000.00
+                  status: "paid"
+                message: "Webhook event processed successfully"
+        '400':
+          description: Validation error - Invalid request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEvent'
+              example:
+                event: "webhook.error"
+                data: {}
+                message: "Invalid request: event is required and must be a string"
+        '401':
+          description: Signature validation failed or missing signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEvent'
+              examples:
+                missingSignature:
+                  value:
+                    event: "webhook.error"
+                    data: {}
+                    message: "Webhook signature is required"
+                invalidSignature:
+                  value:
+                    event: "webhook.error"
+                    data: {}
+                    message: "Webhook signature validation failed"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEvent'
+              example:
+                event: "webhook.error"
+                data: {}
+                message: "Internal server error"
+
+components:
+  schemas:
+    CreateBillRequest:
+      type: object
+      required:
+        - identifier
+        - firstName
+        - lastName
+        - telephone
+        - address
+        - esBillDetailsDto
+      properties:
+        identifier:
+          type: string
+          description: Taxpayer ID or TPUI
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        telephone:
+          type: string
+        address:
+          type: string
+        engineCode:
+          type: string
+          description: Optional, injected from env if missing
+        esBillDetailsDto:
+          type: array
+          items:
+            $ref: '#/components/schemas/EsBillDetailDto'
+
+    EsBillDetailDto:
+      type: object
+      required:
+        - amount
+        - mdasId
+        - narration
+      properties:
+        amount:
+          type: number
+          format: double
+        mdasId:
+          type: integer
+          description: Revenue Head ID
+        narration:
+          type: string
+        recommendedRate:
+          type: number
+          format: double
+
+    BulkBillRequest:
+      type: object
+      properties:
+        engineCode:
+          type: string
+        esBillDtos:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/CreateBillRequest'
+              - type: object
+                properties:
+                  engineCode:
+                    type: string
+
+    Bill:
+      type: object
+      properties:
+        billReference:
+          type: string
+        payStatus:
+          type: string
+        narration:
+          type: string
+
+    BillItem:
+      type: object
+      properties:
+        revenueHead:
+          type: string
+        amount:
+          type: number
+          format: double
+        revenueCode:
+          type: string
+
+    CreateBillResponse:
+      type: object
+      properties:
+        bill:
+          $ref: '#/components/schemas/Bill'
+        billItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillItem'
+        failedBillItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillItem'
+
+    AttachDataRequest:
+      type: object
+      required:
+        - billReference
+        - additionalData
+      properties:
+        billReference:
+          type: string
+        additionalData:
+          type: object
+          additionalProperties: true
+
+    BulkAttachDataRequest:
+      type: object
+      required:
+        - bills
+      properties:
+        bills:
+          type: array
+          items:
+            type: object
+            required:
+              - billReference
+              - additionalData
+            properties:
+              billReference:
+                type: string
+              additionalData:
+                type: object
+                additionalProperties: true
+
+    InvoiceUrlResponse:
+      type: object
+      properties:
+        invoiceUrl:
+          type: string
+          format: uri
+
+    RegisterTaxpayerRequest:
+      type: object
+      required:
+        - identifier
+        - firstName
+        - lastName
+        - tin
+        - email
+        - phoneNumber
+        - genderId
+        - addressLine1
+        - userType
+        - password
+        - confirmPassword
+      properties:
+        identifier:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        tin:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        genderId:
+          type: integer
+          enum: [1, 2, 3]
+          description: 1=Female, 2=Male, 3=NotSpecified
+        addressLine1:
+          type: string
+        userType:
+          type: string
+          enum: [Individual, Corporate]
+        password:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+        rcNumber:
+          type: string
+          description: Required if userType is Corporate
+        industryId:
+          type: integer
+          description: Required if userType is Corporate
+        officeName:
+          type: string
+        officeEmail:
+          type: string
+          format: email
+        officePhoneNumber:
+          type: string
+        officeAddressLine1:
+          type: string
+        officeStateId:
+          type: integer
+        officeLgaId:
+          type: integer
+        taxStationId:
+          type: integer
+
+    Taxpayer:
+      type: object
+      properties:
+        identifier:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        tin:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        tpui:
+          type: string
+
+    InitPaymentRequest:
+      type: object
+      required:
+        - tpui
+        - billReference
+      properties:
+        tpui:
+          type: string
+        billReference:
+          type: string
+
+    InitPaymentResponse:
+      type: object
+      properties:
+        checkoutUrl:
+          type: string
+          format: uri
+        rawResponse:
+          type: object
+          additionalProperties: true
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+        statusCode:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+
+    WebhookEvent:
+      type: object
+      required:
+        - event
+        - data
+        - message
+      properties:
+        event:
+          type: string
+          description: Event type identifier (e.g., 'charge.success', 'payment.success', 'payment.error')
+          example: "charge.success"
+        data:
+          type: object
+          description: Event data payload (must include invoiceNo as string)
+          additionalProperties: true
+          properties:
+            invoiceNo:
+              type: string
+              description: Invoice number
+              example: "INV123456"
+          example:
+            invoiceNo: "INV123456"
+            billReference: "BILL123456"
+            amount: 10000.00
+            status: "paid"
+        message:
+          type: string
+          description: Descriptive message for the event
+          example: "Payment completed successfully"
+
+  responses:
+    BadRequest:
+      description: Bad request - validation failure or PayKaduna rejection
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - Invalid API Key or HMAC Signature
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Not found - Bill or Taxpayer not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error - Network error or parsing failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
