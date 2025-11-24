@@ -9,9 +9,9 @@ import { ErrorResponse, ApiError } from '../types/paykaduna.d';
  */
 export function errorHandler(
   err: Error | ZodError | AxiosError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void {
   let error: ApiError;
 

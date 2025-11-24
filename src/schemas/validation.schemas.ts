@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { GENDERS, UserType } from '../types/paykaduna.d';
+
+// Gender IDs: 1=Female, 2=Male, 3=NotSpecified
+const VALID_GENDER_IDS = [1, 2, 3] as const;
 
 /**
  * Zod Validation Schemas for PayKaduna API Requests
@@ -16,7 +18,7 @@ export const taxpayerIdentifierSchema = z.string().min(1, 'Taxpayer identifier i
 export const genderIdSchema = z
   .number()
   .int()
-  .refine((val) => Object.values(GENDERS).includes(val), {
+  .refine((val) => (VALID_GENDER_IDS as readonly number[]).includes(val), {
     message: 'Invalid gender ID',
   });
 
@@ -55,7 +57,7 @@ export const bulkBillRequestSchema = z.object({
 
 export const attachDataRequestSchema = z.object({
   billReference: billReferenceSchema,
-  additionalData: z.record(z.unknown()).refine(
+  additionalData: z.record(z.string(), z.unknown()).refine(
     (val) => Object.keys(val).length >= 1,
     { message: 'Additional data must not be empty' }
   ),
@@ -66,7 +68,7 @@ export const bulkAttachDataRequestSchema = z.object({
     .array(
       z.object({
         billReference: billReferenceSchema,
-        additionalData: z.record(z.unknown()).refine(
+        additionalData: z.record(z.string(), z.unknown()).refine(
           (val) => Object.keys(val).length >= 1,
           { message: 'Additional data must not be empty' }
         ),

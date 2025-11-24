@@ -6,10 +6,10 @@ import {
   billReferenceParamSchema,
   attachDataRequestSchema,
   bulkAttachDataRequestSchema,
-  CreateBillRequest,
-  BulkBillRequest,
-  AttachDataRequest,
-  BulkAttachDataRequest,
+  CreateBillRequestInput,
+  BulkBillRequestInput,
+  AttachDataRequestInput,
+  BulkAttachDataRequestInput,
 } from '../schemas/validation.schemas';
 import logger from '../middleware/logger';
 import { asyncHandler } from '../middleware/errorHandler';
@@ -26,7 +26,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 export const createBill = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Validate request body
-    const validatedData = createBillRequestSchema.parse(req.body) as CreateBillRequest;
+    const validatedData = createBillRequestSchema.parse(req.body) as CreateBillRequestInput;
 
     // Create bill via PayKaduna service
     const result = await payKadunaService.createESBill(validatedData);
@@ -46,7 +46,7 @@ export const createBill = asyncHandler(
 export const createBulkBills = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Validate request body
-    const validatedData = bulkBillRequestSchema.parse(req.body) as BulkBillRequest;
+    const validatedData = bulkBillRequestSchema.parse(req.body) as BulkBillRequestInput;
 
     // Create bulk bills via PayKaduna service
     const result = await payKadunaService.createBulkESBill(validatedData);
@@ -119,7 +119,7 @@ export const attachMetadata = asyncHandler(
     const validatedData = attachDataRequestSchema.parse({
       billReference: reference,
       additionalData: req.body.additionalData || req.body,
-    }) as AttachDataRequest;
+    }) as AttachDataRequestInput;
 
     // Attach metadata via PayKaduna service
     const result = await payKadunaService.attachAdditionalDataToBill(validatedData);
@@ -139,7 +139,7 @@ export const attachMetadata = asyncHandler(
 export const bulkAttachMetadata = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Validate request body
-    const validatedData = bulkAttachDataRequestSchema.parse(req.body) as BulkAttachDataRequest;
+    const validatedData = bulkAttachDataRequestSchema.parse(req.body) as BulkAttachDataRequestInput;
 
     // Bulk attach metadata via PayKaduna service
     const result = await payKadunaService.bulkAttachAdditionalDataToBill(validatedData);

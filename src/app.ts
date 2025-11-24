@@ -35,7 +35,7 @@ export function createApp(): Express {
   // Health Check
   // ============================================================================
 
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
       service: 'paykaduna-integration',
@@ -83,7 +83,7 @@ export function createApp(): Express {
   }));
 
   // Swagger JSON endpoint
-  app.get('/docs/json', (req, res) => {
+  app.get('/docs/json', (_req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
@@ -93,7 +93,7 @@ export function createApp(): Express {
   // ============================================================================
 
   // 404 handler
-  app.use((req, res, next) => {
+  app.use((req, res) => {
     res.status(404).json({
       error: {
         code: 'NOT_FOUND',
