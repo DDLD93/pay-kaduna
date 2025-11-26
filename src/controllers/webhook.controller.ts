@@ -93,7 +93,11 @@ export const handleWebhook = asyncHandler(
 
       // Process the event directly (no queue)
       // Add your business logic here
-
+      logger.info({
+        event: event.event, 
+        data: event.data, 
+        message: 'Webhook event processed successfully',
+      });
       // Return success response in standardized format
       res.status(200).json({
         event: event.event,
