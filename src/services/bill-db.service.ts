@@ -47,7 +47,7 @@ class BillDbService {
             narration: billData.narration || null,
             invoiceNo: additionalData?.invoiceNo || null,
             invoiceUrl: additionalData?.invoiceUrl || null,
-            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.JsonObject) : null,
+            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.JsonObject) : Prisma.JsonNull,
             head: additionalData?.head !== undefined ? additionalData.head : billData.head || null,
             subhead: additionalData?.subhead !== undefined ? additionalData.subhead : billData.subhead || null,
             paidAt: additionalData?.paidAt !== undefined ? additionalData.paidAt : (billData.paidAt ? new Date(billData.paidAt) : null),

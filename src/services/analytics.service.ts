@@ -331,8 +331,8 @@ class AnalyticsService {
     try {
       const where = this.buildWhereClause(filter);
       // Only include bills that have been paid
-      if (where.paidAt) {
-        where.paidAt = { ...where.paidAt, not: null };
+      if (where.paidAt && typeof where.paidAt === 'object') {
+        where.paidAt = { ...(where.paidAt as Record<string, unknown>), not: null };
       } else {
         where.paidAt = { not: null };
       }
