@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import prisma from '../lib/prisma';
 import logger from '../middleware/logger';
 
@@ -6,6 +7,16 @@ import logger from '../middleware/logger';
  * Analytics Service
  * Handles aggregation queries for bill analytics
  */
+
+type BillWithItems = Prisma.BillGetPayload<{
+  include: {
+    billItems: {
+      select: {
+        amount: true;
+      };
+    };
+  };
+}>;
 
 export interface AnalyticsFilter {
   startDate?: Date;
@@ -71,9 +82,7 @@ class AnalyticsService {
    * Calculate aggregations from bill items
    */
   private calculateAggregations(
-    bills: Array<{
-      billItems: Array<{ amount: Prisma.Decimal }>;
-    }>
+    bills: BillWithItems[]
   ): {
     count: number;
     sum: number;
@@ -83,8 +92,8 @@ class AnalyticsService {
   } {
     const allAmounts: number[] = [];
 
-    bills.forEach((bill) => {
-      bill.billItems.forEach((item) => {
+    bills.forEach((bill: BillWithItems) => {
+      bill.billItems.forEach((item: { amount: Decimal }) => {
         allAmounts.push(Number(item.amount));
       });
     });
@@ -127,9 +136,9 @@ class AnalyticsService {
       });
 
       // Group by payStatus
-      const grouped = new Map<string, typeof bills>();
+      const grouped = new Map<string, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         const status = bill.payStatus;
         if (!grouped.has(status)) {
           grouped.set(status, []);
@@ -143,7 +152,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, status) => {
+      grouped.forEach((groupBills: BillWithItems[], status: string) => {
         const agg = this.calculateAggregations(groupBills);
         items.push({
           groupBy: 'status',
@@ -152,8 +161,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });
@@ -199,9 +208,9 @@ class AnalyticsService {
       });
 
       // Group by head
-      const grouped = new Map<string | null, typeof bills>();
+      const grouped = new Map<string | null, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         const head = bill.head;
         if (!grouped.has(head)) {
           grouped.set(head, []);
@@ -215,7 +224,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, head) => {
+      grouped.forEach((groupBills: BillWithItems[], head: string | null) => {
         const agg = this.calculateAggregations(groupBills);
         items.push({
           groupBy: 'head',
@@ -224,8 +233,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });
@@ -271,9 +280,9 @@ class AnalyticsService {
       });
 
       // Group by subhead
-      const grouped = new Map<string | null, typeof bills>();
+      const grouped = new Map<string | null, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         const subhead = bill.subhead;
         if (!grouped.has(subhead)) {
           grouped.set(subhead, []);
@@ -287,7 +296,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, subhead) => {
+      grouped.forEach((groupBills: BillWithItems[], subhead: string | null) => {
         const agg = this.calculateAggregations(groupBills);
         items.push({
           groupBy: 'subhead',
@@ -296,8 +305,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });
@@ -349,9 +358,9 @@ class AnalyticsService {
       });
 
       // Group by date (YYYY-MM-DD format)
-      const grouped = new Map<string, typeof bills>();
+      const grouped = new Map<string, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         if (bill.paidAt) {
           const dateKey = bill.paidAt.toISOString().split('T')[0]; // YYYY-MM-DD
           if (!grouped.has(dateKey)) {
@@ -367,7 +376,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, dateKey) => {
+      grouped.forEach((groupBills: BillWithItems[], dateKey: string) => {
         const agg = this.calculateAggregations(groupBills);
         items.push({
           groupBy: 'paidAt',
@@ -376,8 +385,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });
@@ -430,9 +439,9 @@ class AnalyticsService {
       });
 
       // Group by status and head
-      const grouped = new Map<string, typeof bills>();
+      const grouped = new Map<string, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         const key = `${bill.payStatus}::${bill.head || 'null'}`;
         if (!grouped.has(key)) {
           grouped.set(key, []);
@@ -446,7 +455,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, key) => {
+      grouped.forEach((groupBills: BillWithItems[], key: string) => {
         const [status, head] = key.split('::');
         const agg = this.calculateAggregations(groupBills);
         items.push({
@@ -456,8 +465,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });
@@ -503,9 +512,9 @@ class AnalyticsService {
       });
 
       // Group by status, head, and subhead
-      const grouped = new Map<string, typeof bills>();
+      const grouped = new Map<string, BillWithItems[]>();
 
-      bills.forEach((bill) => {
+      bills.forEach((bill: BillWithItems) => {
         const key = `${bill.payStatus}::${bill.head || 'null'}::${bill.subhead || 'null'}`;
         if (!grouped.has(key)) {
           grouped.set(key, []);
@@ -519,7 +528,7 @@ class AnalyticsService {
       let totalSum = 0;
       const allAmounts: number[] = [];
 
-      grouped.forEach((groupBills, key) => {
+      grouped.forEach((groupBills: BillWithItems[], key: string) => {
         const [status, head, subhead] = key.split('::');
         const agg = this.calculateAggregations(groupBills);
         items.push({
@@ -533,8 +542,8 @@ class AnalyticsService {
         });
         totalCount += agg.count;
         totalSum += agg.sum;
-        groupBills.forEach((bill) => {
-          bill.billItems.forEach((item) => {
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
             allAmounts.push(Number(item.amount));
           });
         });

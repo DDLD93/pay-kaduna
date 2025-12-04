@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import prisma from '../lib/prisma';
 import logger from '../middleware/logger';
 import { Bill, BillItem, GetBillResponse, CreateBillResponse } from '../types/paykaduna.d';
@@ -35,7 +36,7 @@ class BillDbService {
             narration: billData.narration || null,
             invoiceNo: additionalData?.invoiceNo || undefined,
             invoiceUrl: additionalData?.invoiceUrl || undefined,
-            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.JsonObject) : undefined,
+            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.InputJsonValue) : undefined,
             head: additionalData?.head !== undefined ? additionalData.head : billData.head || null,
             subhead: additionalData?.subhead !== undefined ? additionalData.subhead : billData.subhead || null,
             paidAt: additionalData?.paidAt !== undefined ? additionalData.paidAt : (billData.paidAt ? new Date(billData.paidAt) : null),
@@ -47,7 +48,7 @@ class BillDbService {
             narration: billData.narration || null,
             invoiceNo: additionalData?.invoiceNo || null,
             invoiceUrl: additionalData?.invoiceUrl || null,
-            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.JsonObject) : Prisma.JsonNull,
+            metadata: additionalData?.metadata ? (additionalData.metadata as Prisma.InputJsonValue) : Prisma.DbNull,
             head: additionalData?.head !== undefined ? additionalData.head : billData.head || null,
             subhead: additionalData?.subhead !== undefined ? additionalData.subhead : billData.subhead || null,
             paidAt: additionalData?.paidAt !== undefined ? additionalData.paidAt : (billData.paidAt ? new Date(billData.paidAt) : null),
@@ -66,7 +67,7 @@ class BillDbService {
               billReference: billData.billReference,
               revenueHead: item.revenueHead,
               revenueCode: item.revenueCode,
-              amount: new Prisma.Decimal(item.amount),
+              amount: new Decimal(item.amount),
               // Note: mdasId and narration from BillItem aren't in the API response,
               // but we keep them in schema for potential future use
             })),
@@ -171,7 +172,7 @@ class BillDbService {
         }
 
         // Store webhook data as metadata
-        updateData.metadata = webhookData as Prisma.JsonObject;
+        updateData.metadata = webhookData as Prisma.InputJsonValue;
 
         await prisma.bill.update({
           where: { billReference },
