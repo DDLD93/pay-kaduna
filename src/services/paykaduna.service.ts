@@ -6,6 +6,7 @@ import {
   CreateBillRequest,
   BulkBillRequest,
   CreateBillResponse,
+  GetBillResponse,
   AttachDataRequest,
   BulkAttachDataRequest,
   InvoiceUrlResponse,
@@ -104,8 +105,8 @@ class PayKadunaService {
    * Get Bill by reference
    * Upstream: GET /api/ESBills/GetBill?billreference=:reference
    */
-  async getBill(billReference: string): Promise<unknown> {
-    const response = await this.request<unknown>({
+  async getBill(billReference: string): Promise<GetBillResponse> {
+    const response = await this.request<GetBillResponse>({
       method: 'GET',
       url: '/api/ESBills/GetBill',
       params: {

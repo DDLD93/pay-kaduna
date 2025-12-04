@@ -4,6 +4,8 @@ import config from '../config/env';
 import logger from '../middleware/logger';
 import { asyncHandler } from '../middleware/errorHandler';
 import { WebhookEvent } from '../types/paykaduna.d';
+import { payKadunaService } from '../services/paykaduna.service';
+import { billDbService } from '../services/bill-db.service';
 
 /**
  * Webhook Controller
@@ -91,13 +93,43 @@ export const handleWebhook = asyncHandler(
         hasInvoiceNo: !!(event.data && 'invoiceNo' in event.data),
       });
 
-      // Process the event directly (no queue)
-      // Add your business logic here
-      logger.info({
-        event: event.event, 
-        data: event.data, 
-        message: 'Webhook event processed successfully',
-      });
+      // Extract billReference from webhook data if available
+      const billReference = event.data?.billReference as string | undefined;
+
+      // Update database if billReference is present
+      if (billReference) {
+        try {
+          // Fetch latest bill data from API to ensure we have complete information
+          let apiBillData;
+          try {
+            apiBillData = await payKadunaService.getBill(billReference);
+          } catch (apiError) {
+            logger.warn('Failed to fetch bill from API for webhook update', {
+              billReference,
+              error: apiError instanceof Error ? apiError.message : String(apiError),
+            });
+          }
+
+          // Update database with webhook data
+          await billDbService.updateBillFromWebhook(
+            billReference,
+            event.data,
+            apiBillData,
+            event.event
+          );
+        } catch (dbError) {
+          // Log error but don't fail the webhook response
+          logger.error('Failed to update bill in database from webhook', {
+            billReference,
+            error: dbError instanceof Error ? dbError.message : String(dbError),
+          });
+        }
+      } else {
+        logger.debug('No billReference found in webhook data, skipping database update', {
+          event: event.event,
+        });
+      }
+
       // Return success response in standardized format
       res.status(200).json({
         event: event.event,

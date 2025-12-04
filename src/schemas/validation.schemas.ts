@@ -172,6 +172,23 @@ export const billReferenceParamSchema = z.object({
 });
 
 // ============================================================================
+// Analytics Schemas
+// ============================================================================
+
+export const analyticsDateRangeSchema = z.object({
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+});
+
+export const analyticsQuerySchema = z.object({
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  status: z.string().optional(),
+  head: z.string().optional(),
+  subhead: z.string().optional(),
+});
+
+// ============================================================================
 // Type Exports (inferred from schemas)
 // ============================================================================
 
@@ -184,3 +201,5 @@ export type SearchTaxpayerQueryInput = z.infer<typeof searchTaxpayerQuerySchema>
 export type InitPaymentRequestInput = z.infer<typeof initPaymentRequestSchema>;
 export type UpdateRedirectUrlQueryInput = z.infer<typeof updateRedirectUrlQuerySchema>;
 export type BillReferenceParamInput = z.infer<typeof billReferenceParamSchema>;
+export type AnalyticsQueryInput = z.infer<typeof analyticsQuerySchema>;
+export type AnalyticsDateRangeInput = z.infer<typeof analyticsDateRangeSchema>;

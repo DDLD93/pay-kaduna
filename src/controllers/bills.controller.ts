@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { payKadunaService } from '../services/paykaduna.service';
+import { billDbService } from '../services/bill-db.service';
 import {
   createBillRequestSchema,
   bulkBillRequestSchema,
@@ -31,6 +32,19 @@ export const createBill = asyncHandler(
     // Create bill via PayKaduna service
     const result = await payKadunaService.createESBill(validatedData);
 
+    // Save to database if bill was created successfully
+    if (result.bill && result.billItems) {
+      try {
+        await billDbService.saveBillFromResponse(result);
+      } catch (error) {
+        // Log error but don't fail the request
+        logger.error('Failed to save bill to database', {
+          billReference: result.bill?.billReference,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
     logger.info('Bill created successfully', {
       billReference: result.bill?.billReference,
     });
@@ -50,6 +64,19 @@ export const createBulkBills = asyncHandler(
 
     // Create bulk bills via PayKaduna service
     const result = await payKadunaService.createBulkESBill(validatedData);
+
+    // Save to database if bill was created successfully
+    if (result.bill && result.billItems) {
+      try {
+        await billDbService.saveBillFromResponse(result);
+      } catch (error) {
+        // Log error but don't fail the request
+        logger.error('Failed to save bill to database', {
+          billReference: result.bill?.billReference,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
 
     // Check for failed bill items
     const hasFailures = result.failedBillItems && result.failedBillItems.length > 0;
@@ -81,6 +108,29 @@ export const getBill = asyncHandler(
 
     // Get bill via PayKaduna service
     const bill = await payKadunaService.getBill(reference);
+
+    // Update database with latest bill data
+    if (bill.bill && bill.billItems) {
+      try {
+        // Try to get invoice URL if available
+        let invoiceUrl: string | undefined;
+        try {
+          const invoiceUrlResponse = await payKadunaService.getInvoiceUrl(reference);
+          invoiceUrl = invoiceUrlResponse.invoiceUrl;
+        } catch (error) {
+          // Invoice URL fetch is optional, continue without it
+          logger.debug('Invoice URL not available', { billReference: reference });
+        }
+
+        await billDbService.saveBillFromGetResponse(bill, invoiceUrl);
+      } catch (error) {
+        // Log error but don't fail the request
+        logger.error('Failed to update bill in database', {
+          billReference: reference,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
 
     logger.info('Bill retrieved', { billReference: reference });
 

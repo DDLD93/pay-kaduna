@@ -34,6 +34,9 @@ export interface Bill {
   billReference: string;
   payStatus: string;
   narration: string;
+  head?: string;
+  subhead?: string;
+  paidAt?: Date | string;
 }
 
 export interface BillItem {
@@ -46,6 +49,11 @@ export interface CreateBillResponse {
   bill: Bill;
   billItems: BillItem[];
   failedBillItems: BillItem[];
+}
+
+export interface GetBillResponse {
+  bill: Bill;
+  billItems: BillItem[];
 }
 
 export interface AttachDataRequest {

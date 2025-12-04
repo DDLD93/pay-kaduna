@@ -24,6 +24,8 @@ tags:
     description: Configuration endpoints
   - name: Webhooks
     description: Webhook endpoints for receiving events
+  - name: Analytics
+    description: Analytics and aggregation endpoints
 
 paths:
   /v1/bills:
@@ -427,6 +429,406 @@ paths:
                 data: {}
                 message: "Internal server error"
 
+  /v1/analytics/status:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by status
+      description: Get aggregated analytics grouped by bill status (payStatus)
+      operationId: getAnalyticsByStatus
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              example:
+                groupBy: "status"
+                totalCount: 150
+                totalSum: 1500000.00
+                totalAverage: 10000.00
+                totalMin: 500.00
+                totalMax: 50000.00
+                items:
+                  - groupBy: "status"
+                    value: "paid"
+                    count: 100
+                    sum: 1000000.00
+                    average: 10000.00
+                    min: 500.00
+                    max: 50000.00
+                  - groupBy: "status"
+                    value: "pending"
+                    count: 50
+                    sum: 500000.00
+                    average: 10000.00
+                    min: 1000.00
+                    max: 30000.00
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/head:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by head
+      description: Get aggregated analytics grouped by head
+      operationId: getAnalyticsByHead
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/subhead:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by subhead
+      description: Get aggregated analytics grouped by subhead
+      operationId: getAnalyticsBySubhead
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/paid-at:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by paidAt
+      description: Get aggregated analytics grouped by paidAt date (only includes paid bills)
+      operationId: getAnalyticsByPaidAt
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              example:
+                groupBy: "paidAt"
+                totalCount: 100
+                totalSum: 1000000.00
+                totalAverage: 10000.00
+                totalMin: 500.00
+                totalMax: 50000.00
+                items:
+                  - groupBy: "paidAt"
+                    value: "2025-01-15"
+                    count: 50
+                    sum: 500000.00
+                    average: 10000.00
+                    min: 500.00
+                    max: 50000.00
+                  - groupBy: "paidAt"
+                    value: "2025-01-16"
+                    count: 50
+                    sum: 500000.00
+                    average: 10000.00
+                    min: 1000.00
+                    max: 30000.00
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/status-head:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by status and head
+      description: Get aggregated analytics grouped by status and head (multi-dimensional)
+      operationId: getAnalyticsByStatusAndHead
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              example:
+                groupBy: "status-head"
+                totalCount: 150
+                totalSum: 1500000.00
+                totalAverage: 10000.00
+                totalMin: 500.00
+                totalMax: 50000.00
+                items:
+                  - groupBy: "status-head"
+                    value: '{"status":"paid","head":"Revenue Head 1"}'
+                    count: 75
+                    sum: 750000.00
+                    average: 10000.00
+                    min: 500.00
+                    max: 50000.00
+                  - groupBy: "status-head"
+                    value: '{"status":"pending","head":"Revenue Head 1"}'
+                    count: 75
+                    sum: 750000.00
+                    average: 10000.00
+                    min: 1000.00
+                    max: 30000.00
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/status-head-subhead:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by status, head, and subhead
+      description: Get aggregated analytics grouped by status, head, and subhead (full multi-dimensional)
+      operationId: getAnalyticsByStatusHeadSubhead
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering by paidAt (ISO 8601 format)
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering by paidAt (ISO 8601 format)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              example:
+                groupBy: "status-head-subhead"
+                totalCount: 150
+                totalSum: 1500000.00
+                totalAverage: 10000.00
+                totalMin: 500.00
+                totalMax: 50000.00
+                items:
+                  - groupBy: "status-head-subhead"
+                    value: '{"status":"paid","head":"Revenue Head 1","subhead":"Subhead A"}'
+                    count: 50
+                    sum: 500000.00
+                    average: 10000.00
+                    min: 500.00
+                    max: 50000.00
+                  - groupBy: "status-head-subhead"
+                    value: '{"status":"paid","head":"Revenue Head 1","subhead":"Subhead B"}'
+                    count: 25
+                    sum: 250000.00
+                    average: 10000.00
+                    min: 1000.00
+                    max: 30000.00
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   schemas:
     CreateBillRequest:
@@ -503,6 +905,19 @@ components:
           type: string
         narration:
           type: string
+        head:
+          type: string
+          nullable: true
+          description: Revenue head identifier
+        subhead:
+          type: string
+          nullable: true
+          description: Revenue subhead identifier
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when bill was paid
 
     BillItem:
       type: object
@@ -722,6 +1137,80 @@ components:
           type: string
           description: Event message
           example: "Payment completed successfully"
+
+    AggregationResult:
+      type: object
+      properties:
+        groupBy:
+          type: string
+          description: The field used for grouping
+          example: "status"
+        value:
+          type: string
+          nullable: true
+          description: The grouped value (or JSON string for multi-dimensional)
+          example: "paid"
+        count:
+          type: integer
+          description: Number of bill items in this group
+          example: 100
+        sum:
+          type: number
+          format: double
+          description: Sum of amounts in this group
+          example: 1000000.00
+        average:
+          type: number
+          format: double
+          description: Average amount in this group
+          example: 10000.00
+        min:
+          type: number
+          format: double
+          description: Minimum amount in this group
+          example: 500.00
+        max:
+          type: number
+          format: double
+          description: Maximum amount in this group
+          example: 50000.00
+
+    AnalyticsResponse:
+      type: object
+      properties:
+        groupBy:
+          type: string
+          description: The field(s) used for grouping
+          example: "status"
+        totalCount:
+          type: integer
+          description: Total count of bill items across all groups
+          example: 150
+        totalSum:
+          type: number
+          format: double
+          description: Total sum of amounts across all groups
+          example: 1500000.00
+        totalAverage:
+          type: number
+          format: double
+          description: Average amount across all groups
+          example: 10000.00
+        totalMin:
+          type: number
+          format: double
+          description: Minimum amount across all groups
+          example: 500.00
+        totalMax:
+          type: number
+          format: double
+          description: Maximum amount across all groups
+          example: 50000.00
+        items:
+          type: array
+          description: Aggregated results for each group
+          items:
+            $ref: '#/components/schemas/AggregationResult'
 
   responses:
     BadRequest:

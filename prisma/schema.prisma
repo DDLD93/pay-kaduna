@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Bill {
+  billReference String    @id
+  payStatus     String
+  narration     String?
+  invoiceNo     String?
+  invoiceUrl    String?
+  metadata      Json?
+  head          String?
+  subhead       String?
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  billItems     BillItem[]
+
+  @@map("bills")
+  @@index([head])
+  @@index([subhead])
+  @@index([paidAt])
+}
+
+model BillItem {
+  id            Int       @id @default(autoincrement())
+  billReference String
+  revenueHead   String
+  revenueCode   String
+  amount        Decimal   @db.Decimal(18, 2)
+  mdasId        Int?
+  narration     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bill          Bill      @relation(fields: [billReference], references: [billReference], onDelete: Cascade)
+
+  @@map("bill_items")
+  @@index([billReference])
+}
+
