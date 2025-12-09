@@ -45,7 +45,7 @@ RUN npm ci --only=production && \
     npm cache clean --force
 
 # Generate Prisma Client
-RUN npx prisma generate
+# RUN npx prisma generate
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
