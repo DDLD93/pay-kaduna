@@ -19,6 +19,7 @@ import { billDbService } from '../services/bill-db.service';
 export const handleWebhook = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
+      console.warn('Webhook received', req.body);
       // Get the signature from header - only x-paykaduna-signature is accepted
       const signature = req.headers['x-paykaduna-signature'];
 
