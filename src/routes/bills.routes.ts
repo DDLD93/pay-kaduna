@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  getAllBills,
   createBill,
   createBulkBills,
   getBill,
@@ -14,6 +15,9 @@ const router = Router();
  * Bills Routes
  * All routes are prefixed with /v1/bills
  */
+
+// Get all bills (must be before /:reference route)
+router.get('/', getAllBills);
 
 // Create a single bill
 router.post('/', createBill);

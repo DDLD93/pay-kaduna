@@ -189,6 +189,41 @@ export const analyticsQuerySchema = z.object({
 });
 
 // ============================================================================
+// Get All Bills Query Schema
+// ============================================================================
+
+export const getAllBillsQuerySchema = z.object({
+  // Text search filters
+  billReference: z.string().optional(),
+  invoiceNo: z.string().optional(),
+  
+  // Exact match filters
+  status: z.string().optional(),
+  head: z.string().optional(),
+  subhead: z.string().optional(),
+  
+  // Date range filters
+  createdAtStart: z.string().datetime().optional(),
+  createdAtEnd: z.string().datetime().optional(),
+  updatedAtStart: z.string().datetime().optional(),
+  updatedAtEnd: z.string().datetime().optional(),
+  paidAtStart: z.string().datetime().optional(),
+  paidAtEnd: z.string().datetime().optional(),
+  
+  // Amount range filters (coerce from string to number)
+  minAmount: z.coerce.number().optional(),
+  maxAmount: z.coerce.number().optional(),
+  
+  // Pagination (coerce from string to number)
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  
+  // Sorting
+  sortBy: z.enum(['createdAt', 'updatedAt', 'paidAt']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+// ============================================================================
 // Type Exports (inferred from schemas)
 // ============================================================================
 
@@ -203,3 +238,4 @@ export type UpdateRedirectUrlQueryInput = z.infer<typeof updateRedirectUrlQueryS
 export type BillReferenceParamInput = z.infer<typeof billReferenceParamSchema>;
 export type AnalyticsQueryInput = z.infer<typeof analyticsQuerySchema>;
 export type AnalyticsDateRangeInput = z.infer<typeof analyticsDateRangeSchema>;
+export type GetAllBillsQueryInput = z.infer<typeof getAllBillsQuerySchema>;

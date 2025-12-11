@@ -68,6 +68,177 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    get:
+      tags:
+        - Bills
+      summary: Get all bills
+      description: |
+        Fetch all bills with comprehensive filtering, range queries, pagination, and sorting.
+        
+        Supports:
+        - Text search: billReference, invoiceNo (partial match, case-insensitive)
+        - Exact filters: status, head, subhead
+        - Date ranges: createdAt, updatedAt, paidAt
+        - Amount ranges: minAmount, maxAmount (based on total bill amount)
+        - Pagination: page and limit
+        - Sorting: by createdAt, updatedAt, or paidAt (asc/desc)
+      operationId: getAllBills
+      parameters:
+        - name: billReference
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by bill reference (partial match, case-insensitive)
+        - name: invoiceNo
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by invoice number (partial match, case-insensitive)
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by payment status (exact match)
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by revenue head (exact match)
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by revenue subhead (exact match)
+        - name: createdAtStart
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills created after this date (ISO 8601)
+        - name: createdAtEnd
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills created before this date (ISO 8601)
+        - name: updatedAtStart
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills updated after this date (ISO 8601)
+        - name: updatedAtEnd
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills updated before this date (ISO 8601)
+        - name: paidAtStart
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills paid after this date (ISO 8601)
+        - name: paidAtEnd
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Filter bills paid before this date (ISO 8601)
+        - name: minAmount
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+          description: Filter bills with total amount >= minAmount
+        - name: maxAmount
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+          description: Filter bills with total amount <= maxAmount
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of items per page (max 100)
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, paidAt]
+            default: createdAt
+          description: Field to sort by
+        - name: sortOrder
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order (ascending or descending)
+      responses:
+        '200':
+          description: Bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllBillsResponse'
+              example:
+                data:
+                  - billReference: "BILL123456"
+                    payStatus: "paid"
+                    narration: "Property Tax Payment"
+                    invoiceNo: "INV123456"
+                    invoiceUrl: "https://example.com/invoice/123456"
+                    head: "Revenue Head 1"
+                    subhead: "Subhead A"
+                    paidAt: "2025-01-15T10:30:00.000Z"
+                    createdAt: "2025-01-10T08:00:00.000Z"
+                    updatedAt: "2025-01-15T10:30:00.000Z"
+                    billItems:
+                      - id: 1
+                        revenueHead: "Revenue Head 1"
+                        revenueCode: "CODE123"
+                        amount: 10000.00
+                        mdasId: 1
+                        narration: "Property Tax"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalCount: 150
+                  totalPages: 8
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /v1/bills/bulk:
     post:
       tags:
@@ -905,6 +1076,17 @@ components:
           type: string
         narration:
           type: string
+          nullable: true
+        invoiceNo:
+          type: string
+          nullable: true
+        invoiceUrl:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
         head:
           type: string
           nullable: true
@@ -918,17 +1100,72 @@ components:
           format: date-time
           nullable: true
           description: Timestamp when bill was paid
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when bill was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when bill was last updated
 
     BillItem:
       type: object
       properties:
+        id:
+          type: integer
+          description: Bill item ID
         revenueHead:
+          type: string
+        revenueCode:
           type: string
         amount:
           type: number
           format: double
-        revenueCode:
+        mdasId:
+          type: integer
+          nullable: true
+        narration:
           type: string
+          nullable: true
+
+    BillDetail:
+      type: object
+      description: Bill with all details and items
+      allOf:
+        - $ref: '#/components/schemas/Bill'
+        - type: object
+          properties:
+            billItems:
+              type: array
+              items:
+                $ref: '#/components/schemas/BillItem'
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Number of items per page
+        totalCount:
+          type: integer
+          description: Total number of items
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    GetAllBillsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillDetail'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
 
     CreateBillResponse:
       type: object

@@ -7,10 +7,12 @@ import {
   billReferenceParamSchema,
   attachDataRequestSchema,
   bulkAttachDataRequestSchema,
+  getAllBillsQuerySchema,
   CreateBillRequestInput,
   BulkBillRequestInput,
   AttachDataRequestInput,
   BulkAttachDataRequestInput,
+  GetAllBillsQueryInput,
 } from '../schemas/validation.schemas';
 import logger from '../middleware/logger';
 import { asyncHandler } from '../middleware/errorHandler';
@@ -19,6 +21,59 @@ import { asyncHandler } from '../middleware/errorHandler';
  * Bills Controller
  * Handles all bill management endpoints
  */
+
+/**
+ * Get all bills with filters, pagination, and sorting
+ * GET /v1/bills
+ */
+export const getAllBills = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    // Validate query parameters
+    const validatedFilters = getAllBillsQuerySchema.parse(req.query) as GetAllBillsQueryInput;
+
+    // Get bills from database
+    const result = await billDbService.getAllBills(validatedFilters);
+
+    // Transform response: convert Decimal to number, format dates
+    const transformedBills = result.bills.map((bill) => ({
+      billReference: bill.billReference,
+      payStatus: bill.payStatus,
+      narration: bill.narration,
+      invoiceNo: bill.invoiceNo,
+      invoiceUrl: bill.invoiceUrl,
+      metadata: bill.metadata,
+      head: bill.head,
+      subhead: bill.subhead,
+      paidAt: bill.paidAt ? bill.paidAt.toISOString() : null,
+      createdAt: bill.createdAt.toISOString(),
+      updatedAt: bill.updatedAt.toISOString(),
+      billItems: bill.billItems.map((item) => ({
+        id: item.id,
+        revenueHead: item.revenueHead,
+        revenueCode: item.revenueCode,
+        amount: Number(item.amount),
+        mdasId: item.mdasId,
+        narration: item.narration,
+      })),
+    }));
+
+    logger.info('All bills retrieved successfully', {
+      page: result.page,
+      limit: result.limit,
+      totalCount: result.totalCount,
+    });
+
+    res.status(200).json({
+      data: transformedBills,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        totalCount: result.totalCount,
+        totalPages: result.totalPages,
+      },
+    });
+  }
+);
 
 /**
  * Create a single bill
