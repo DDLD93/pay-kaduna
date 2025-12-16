@@ -40,6 +40,11 @@ export const createBillRequestSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   telephone: z.string().min(1, 'Telephone is required'),
   address: z.string().min(1, 'Address is required'),
+  billType: z.string().min(1, 'Bill Type is required'),
+  zone: z.string().optional(),
+  area: z.string().optional(),
+  fileNumber: z.string().optional(),
+  propertyType: z.string().min(1, 'Property Type is required'),
   engineCode: z.string().optional(),
   esBillDetailsDto: z
     .array(esBillDetailDtoSchema)
@@ -186,6 +191,11 @@ export const analyticsQuerySchema = z.object({
   status: z.string().optional(),
   head: z.string().optional(),
   subhead: z.string().optional(),
+  billType: z.string().optional(),
+  zone: z.string().optional(),
+  area: z.string().optional(),
+  fileNumber: z.string().optional(),
+  propertyType: z.string().optional(),
 });
 
 // ============================================================================
@@ -201,6 +211,11 @@ export const getAllBillsQuerySchema = z.object({
   status: z.string().optional(),
   head: z.string().optional(),
   subhead: z.string().optional(),
+  billType: z.string().optional(),
+  zone: z.string().optional(),
+  area: z.string().optional(),
+  fileNumber: z.string().optional(),
+  propertyType: z.string().optional(),
   
   // Date range filters
   createdAtStart: z.string().datetime().optional(),

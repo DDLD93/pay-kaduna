@@ -6,6 +6,8 @@ import {
   getAnalyticsByPaidAt,
   getAnalyticsByStatusAndHead,
   getAnalyticsByStatusHeadSubhead,
+  getAnalyticsByZoneAreaBillTypePropertyType,
+  getAnalyticsByTime,
 } from '../controllers/analytics.controller';
 
 const router = Router();
@@ -32,6 +34,12 @@ router.get('/status-head', getAnalyticsByStatusAndHead);
 
 // Get analytics by status, head, and subhead
 router.get('/status-head-subhead', getAnalyticsByStatusHeadSubhead);
+
+// Get analytics by zone, area, billType, and propertyType
+router.get('/zone-area-type', getAnalyticsByZoneAreaBillTypePropertyType);
+
+// Get analytics by time
+router.get('/time', getAnalyticsByTime);
 
 export default router;
 

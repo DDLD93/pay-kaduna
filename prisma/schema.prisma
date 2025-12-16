@@ -20,6 +20,11 @@ model Bill {
   head          String?
   subhead       String?
   paidAt        DateTime?
+  billType      String?
+  zone          String?
+  area          String?
+  fileNumber    String?
+  propertyType  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   billItems     BillItem[]

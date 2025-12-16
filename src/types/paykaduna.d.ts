@@ -21,6 +21,11 @@ export interface CreateBillRequest {
   lastName: string;
   telephone: string;
   address: string;
+  billType: string;
+  zone?: string;
+  area?: string;
+  fileNumber?: string;
+  propertyType: string;
   engineCode?: string; // Optional, inject from env if missing
   esBillDetailsDto: EsBillDetailDto[];
 }
@@ -37,6 +42,11 @@ export interface Bill {
   head?: string;
   subhead?: string;
   paidAt?: Date | string;
+  billType?: string;
+  zone?: string;
+  area?: string;
+  fileNumber?: string;
+  propertyType?: string;
 }
 
 export interface BillItem {

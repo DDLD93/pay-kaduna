@@ -966,6 +966,36 @@ paths:
           schema:
             type: string
           description: Filter by subhead
+        - name: billType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by billType
+        - name: zone
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by zone
+        - name: area
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by area
+        - name: propertyType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by propertyType
+        - name: fileNumber
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by fileNumber
       responses:
         '200':
           description: Analytics retrieved
@@ -988,13 +1018,170 @@ paths:
                     average: 10000.00
                     min: 500.00
                     max: 50000.00
-                  - groupBy: "status-head-subhead"
-                    value: '{"status":"paid","head":"Revenue Head 1","subhead":"Subhead B"}'
-                    count: 25
-                    sum: 250000.00
-                    average: 10000.00
-                    min: 1000.00
-                    max: 30000.00
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/zone-area-type:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by zone, area, billType, and propertyType
+      description: Get aggregated analytics grouped by zone, area, billType, and propertyType
+      operationId: getAnalyticsByZoneAreaBillTypePropertyType
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+        - name: billType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by billType
+        - name: zone
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by zone
+        - name: area
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by area
+        - name: propertyType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by propertyType
+        - name: fileNumber
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by fileNumber
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/analytics/time:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics by time (paidAt)
+      description: Get aggregated analytics grouped by time (paidAt date)
+      operationId: getAnalyticsByTime
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Start date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: End date
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by status
+        - name: head
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by head
+        - name: subhead
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by subhead
+        - name: billType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by billType
+        - name: zone
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by zone
+        - name: area
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by area
+        - name: propertyType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by propertyType
+        - name: fileNumber
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by fileNumber
+      responses:
+        '200':
+          description: Analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -1010,6 +1197,8 @@ components:
         - lastName
         - telephone
         - address
+        - billType
+        - propertyType
         - esBillDetailsDto
       properties:
         identifier:
@@ -1025,6 +1214,21 @@ components:
           type: string
         address:
           type: string
+        billType:
+          type: string
+          description: Type of bill
+        propertyType:
+          type: string
+          description: Type of property
+        zone:
+          type: string
+          description: Zone identifier
+        area:
+          type: string
+          description: Area identifier
+        fileNumber:
+          type: string
+          description: File number
         engineCode:
           type: string
           description: Optional engine code
@@ -1095,6 +1299,26 @@ components:
           type: string
           nullable: true
           description: Revenue subhead identifier
+        billType:
+          type: string
+          nullable: true
+          description: Type of bill
+        propertyType:
+          type: string
+          nullable: true
+          description: Type of property
+        zone:
+          type: string
+          nullable: true
+          description: Zone identifier
+        area:
+          type: string
+          nullable: true
+          description: Area identifier
+        fileNumber:
+          type: string
+          nullable: true
+          description: File number
         paidAt:
           type: string
           format: date-time

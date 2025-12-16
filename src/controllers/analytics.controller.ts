@@ -23,6 +23,11 @@ export const getAnalyticsByStatus = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateByStatus(filter);
@@ -50,6 +55,11 @@ export const getAnalyticsByHead = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateByHead(filter);
@@ -77,6 +87,11 @@ export const getAnalyticsBySubhead = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateBySubhead(filter);
@@ -104,6 +119,11 @@ export const getAnalyticsByPaidAt = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateByPaidAt(filter);
@@ -131,6 +151,11 @@ export const getAnalyticsByStatusAndHead = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateByStatusAndHead(filter);
@@ -158,11 +183,80 @@ export const getAnalyticsByStatusHeadSubhead = asyncHandler(
       status: validatedQuery.status,
       head: validatedQuery.head,
       subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
     };
 
     const result = await analyticsService.aggregateByStatusHeadSubhead(filter);
 
     logger.info('Analytics by status, head, and subhead retrieved', {
+      filter,
+      itemCount: result.items.length,
+    });
+
+    res.status(200).json(result);
+  }
+);
+
+/**
+ * Get analytics aggregated by zone, area, billType, and propertyType
+ * GET /v1/analytics/zone-area-type
+ */
+export const getAnalyticsByZoneAreaBillTypePropertyType = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const validatedQuery = analyticsQuerySchema.parse(req.query) as AnalyticsQueryInput;
+
+    const filter = {
+      startDate: validatedQuery.startDate ? new Date(validatedQuery.startDate) : undefined,
+      endDate: validatedQuery.endDate ? new Date(validatedQuery.endDate) : undefined,
+      status: validatedQuery.status,
+      head: validatedQuery.head,
+      subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
+    };
+
+    const result = await analyticsService.aggregateByZoneAreaBillTypePropertyType(filter);
+
+    logger.info('Analytics by zone, area, billType, and propertyType retrieved', {
+      filter,
+      itemCount: result.items.length,
+    });
+
+    res.status(200).json(result);
+  }
+);
+
+/**
+ * Get analytics aggregated by time (paidAt)
+ * GET /v1/analytics/time
+ */
+export const getAnalyticsByTime = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const validatedQuery = analyticsQuerySchema.parse(req.query) as AnalyticsQueryInput;
+
+    const filter = {
+      startDate: validatedQuery.startDate ? new Date(validatedQuery.startDate) : undefined,
+      endDate: validatedQuery.endDate ? new Date(validatedQuery.endDate) : undefined,
+      status: validatedQuery.status,
+      head: validatedQuery.head,
+      subhead: validatedQuery.subhead,
+      billType: validatedQuery.billType,
+      zone: validatedQuery.zone,
+      area: validatedQuery.area,
+      fileNumber: validatedQuery.fileNumber,
+      propertyType: validatedQuery.propertyType,
+    };
+
+    const result = await analyticsService.aggregateByTime(filter);
+
+    logger.info('Analytics by time retrieved', {
       filter,
       itemCount: result.items.length,
     });

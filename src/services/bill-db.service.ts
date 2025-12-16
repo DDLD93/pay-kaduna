@@ -25,6 +25,11 @@ class BillDbService {
       head?: string;
       subhead?: string;
       paidAt?: Date;
+      billType?: string;
+      zone?: string;
+      area?: string;
+      fileNumber?: string;
+      propertyType?: string;
     }
   ): Promise<void> {
     try {
@@ -41,6 +46,11 @@ class BillDbService {
             head: additionalData?.head !== undefined ? additionalData.head : billData.head || null,
             subhead: additionalData?.subhead !== undefined ? additionalData.subhead : billData.subhead || null,
             paidAt: additionalData?.paidAt !== undefined ? additionalData.paidAt : (billData.paidAt ? new Date(billData.paidAt) : null),
+            billType: additionalData?.billType !== undefined ? additionalData.billType : billData.billType || null,
+            zone: additionalData?.zone !== undefined ? additionalData.zone : billData.zone || null,
+            area: additionalData?.area !== undefined ? additionalData.area : billData.area || null,
+            fileNumber: additionalData?.fileNumber !== undefined ? additionalData.fileNumber : billData.fileNumber || null,
+            propertyType: additionalData?.propertyType !== undefined ? additionalData.propertyType : billData.propertyType || null,
             updatedAt: new Date(),
           },
           create: {
@@ -53,6 +63,11 @@ class BillDbService {
             head: additionalData?.head !== undefined ? additionalData.head : billData.head || null,
             subhead: additionalData?.subhead !== undefined ? additionalData.subhead : billData.subhead || null,
             paidAt: additionalData?.paidAt !== undefined ? additionalData.paidAt : (billData.paidAt ? new Date(billData.paidAt) : null),
+            billType: additionalData?.billType !== undefined ? additionalData.billType : billData.billType || null,
+            zone: additionalData?.zone !== undefined ? additionalData.zone : billData.zone || null,
+            area: additionalData?.area !== undefined ? additionalData.area : billData.area || null,
+            fileNumber: additionalData?.fileNumber !== undefined ? additionalData.fileNumber : billData.fileNumber || null,
+            propertyType: additionalData?.propertyType !== undefined ? additionalData.propertyType : billData.propertyType || null,
           },
         });
 
@@ -255,6 +270,11 @@ class BillDbService {
         status,
         head,
         subhead,
+        billType,
+        zone,
+        area,
+        fileNumber,
+        propertyType,
         createdAtStart,
         createdAtEnd,
         updatedAtStart,
@@ -283,6 +303,26 @@ class BillDbService {
 
       if (subhead) {
         where.subhead = subhead;
+      }
+
+      if (billType) {
+        where.billType = billType;
+      }
+
+      if (zone) {
+        where.zone = zone;
+      }
+
+      if (area) {
+        where.area = area;
+      }
+
+      if (fileNumber) {
+        where.fileNumber = fileNumber;
+      }
+
+      if (propertyType) {
+        where.propertyType = propertyType;
       }
 
       // Text search filters (case-insensitive partial match)

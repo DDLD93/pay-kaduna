@@ -24,6 +24,11 @@ export interface AnalyticsFilter {
   status?: string;
   head?: string;
   subhead?: string;
+  billType?: string;
+  zone?: string;
+  area?: string;
+  fileNumber?: string;
+  propertyType?: string;
 }
 
 export interface AggregationResult {
@@ -63,6 +68,26 @@ class AnalyticsService {
 
     if (filter.subhead) {
       where.subhead = filter.subhead;
+    }
+
+    if (filter.billType) {
+      where.billType = filter.billType;
+    }
+
+    if (filter.zone) {
+      where.zone = filter.zone;
+    }
+
+    if (filter.area) {
+      where.area = filter.area;
+    }
+
+    if (filter.fileNumber) {
+      where.fileNumber = filter.fileNumber;
+    }
+
+    if (filter.propertyType) {
+      where.propertyType = filter.propertyType;
     }
 
     if (filter.startDate || filter.endDate) {
@@ -568,6 +593,91 @@ class AnalyticsService {
       });
       throw error;
     }
+  }
+  /**
+   * Aggregate bills by zone, area, billType, and propertyType
+   */
+  async aggregateByZoneAreaBillTypePropertyType(filter: AnalyticsFilter = {}): Promise<AnalyticsResponse> {
+    try {
+      const where = this.buildWhereClause(filter);
+
+      const bills = await prisma.bill.findMany({
+        where,
+        include: {
+          billItems: {
+            select: {
+              amount: true,
+            },
+          },
+        },
+      });
+
+      // Group by zone, area, billType, propertyType
+      const grouped = new Map<string, BillWithItems[]>();
+
+      bills.forEach((bill: BillWithItems) => {
+        const key = `${bill.zone || 'null'}::${bill.area || 'null'}::${bill.billType || 'null'}::${bill.propertyType || 'null'}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, []);
+        }
+        grouped.get(key)!.push(bill);
+      });
+
+      // Calculate aggregations for each group
+      const items: AggregationResult[] = [];
+      let totalCount = 0;
+      let totalSum = 0;
+      const allAmounts: number[] = [];
+
+      grouped.forEach((groupBills: BillWithItems[], key: string) => {
+        const [zone, area, billType, propertyType] = key.split('::');
+        const agg = this.calculateAggregations(groupBills);
+        items.push({
+          groupBy: 'zone-area-billType-propertyType',
+          value: JSON.stringify({
+            zone: zone === 'null' ? null : zone,
+            area: area === 'null' ? null : area,
+            billType: billType === 'null' ? null : billType,
+            propertyType: propertyType === 'null' ? null : propertyType,
+          }),
+          ...agg,
+        });
+        totalCount += agg.count;
+        totalSum += agg.sum;
+        groupBills.forEach((bill: BillWithItems) => {
+          bill.billItems.forEach((item: { amount: Decimal }) => {
+            allAmounts.push(Number(item.amount));
+          });
+        });
+      });
+
+      const totalAverage = allAmounts.length > 0 ? totalSum / allAmounts.length : 0;
+      const totalMin = allAmounts.length > 0 ? Math.min(...allAmounts) : 0;
+      const totalMax = allAmounts.length > 0 ? Math.max(...allAmounts) : 0;
+
+      return {
+        groupBy: 'zone-area-billType-propertyType',
+        totalCount,
+        totalSum,
+        totalAverage,
+        totalMin,
+        totalMax,
+        items,
+      };
+    } catch (error) {
+      logger.error('Failed to aggregate by zone, area, billType, and propertyType', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Aggregate bills by time (based on paidAt)
+   * Alias for aggregateByPaidAt for now, can be extended to support other date fields
+   */
+  async aggregateByTime(filter: AnalyticsFilter = {}): Promise<AnalyticsResponse> {
+    return this.aggregateByPaidAt(filter);
   }
 }
 
